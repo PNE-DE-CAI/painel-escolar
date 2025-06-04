@@ -550,8 +550,7 @@
     <script>
         // COLOQUE A URL DO SEU GOOGLE APPS SCRIPT AQUI
         // Exemplo: const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfyc.../exec';
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0oM9ehMRzgHZnylCJ5hZBQiKrv2SOcpPgM_x_X_Sz5LNpkjDq9o6QcMlvyKW72HrH/exec'; 
-
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6jqbmZ3KoB91OG3vwrAVEcVHJ46jEwVftnybqew_jHuq4mVk4R2RwV6mwUAtKUQJA/exec'; 
         // Estado de autenticação
         let isAuthenticated = false;
         let userToken = null; // Token recebido do Apps Script após login
@@ -658,6 +657,11 @@
 
                 // Log response status for debugging
                 console.log('Login Response Status:', response.status, response.statusText);
+                if (!response.ok) { // Check if response status is not 2xx
+                    const errorText = await response.text();
+                    console.error('Login Response Body (Error):', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const result = await response.json();
 
@@ -825,6 +829,11 @@
 
                 // Log response status for debugging
                 console.log('Save Data Response Status:', response.status, response.statusText);
+                if (!response.ok) { // Check if response status is not 2xx
+                    const errorText = await response.text();
+                    console.error('Save Data Response Body (Error):', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const result = await response.json();
 
@@ -849,6 +858,11 @@
 
                 // Log response status for debugging
                 console.log('Load Data Response Status:', response.status, response.statusText);
+                if (!response.ok) { // Check if response status is not 2xx
+                    const errorText = await response.text();
+                    console.error('Load Data Response Body (Error):', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const result = await response.json();
 
