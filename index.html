@@ -653,6 +653,10 @@
                     },
                     body: `data=${JSON.stringify({ email, password })}`
                 });
+
+                // Log response status for debugging
+                console.log('Login Response Status:', response.status, response.statusText);
+
                 const result = await response.json();
 
                 if (result.success) {
@@ -816,6 +820,10 @@
                     },
                     body: `data=${JSON.stringify({ dashboardData: currentDashboardData })}`
                 });
+
+                // Log response status for debugging
+                console.log('Save Data Response Status:', response.status, response.statusText);
+
                 const result = await response.json();
 
                 if (result.success) {
@@ -836,6 +844,10 @@
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=getDashboardData`, {
                     method: 'GET'
                 });
+
+                // Log response status for debugging
+                console.log('Load Data Response Status:', response.status, response.statusText);
+
                 const result = await response.json();
 
                 if (result.success && result.dashboardData) {
