@@ -646,12 +646,14 @@
             loginSpinner.classList.remove('hidden');
 
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=login`, {
+                // Envia email e senha como parâmetros URL-encoded diretamente
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: `data=${JSON.stringify({ email, password })}`
+                    // O corpo da requisição pode ser vazio ou conter dados adicionais se necessário pelo Apps Script
+                    body: '' 
                 });
 
                 // Log response status for debugging
