@@ -303,6 +303,13 @@
                 <div class="mb-4 md:mb-0">
                     <h1 class="text-3xl font-bold">E.E. OLINDO DARTORA DR <span id="school-name" class="gradient-text editable">Excelência Educacional</span></h1>
                     <p class="text-indigo-100">Painel de Desempenho Escolar</p>
+                    <!-- Added week and year display -->
+                    <div class="flex items-center text-indigo-100 mt-2">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        Semana: <span id="week-number" class="font-semibold editable ml-1"></span>
+                        <span class="mx-2">/</span>
+                        Ano: <span id="year" class="font-semibold editable ml-1"></span>
+                    </div>
                 </div>
                 <div class="flex items-center bg-white/20 rounded-full px-6 py-2 login-status">
                     <i class="fas fa-user-shield mr-2"></i>
@@ -540,27 +547,18 @@
         </div>
     </footer>
 
-    <script type="module">
-        // Firebase imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        // COLOQUE A URL DO SEU GOOGLE APPS SCRIPT AQUI
+        // Exemplo: const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfyc.../exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0oM9ehMRzgHZnylCJ5hZBQiKrv2SOcpPgM_x_X_Sz5LNpkjDq9o6QcMlvyKW72HrH/exec'; 
 
-        // Global Firebase variables provided by the environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // Firebase initialization
-        const firebaseApp = initializeApp(firebaseConfig);
-        const auth = getAuth(firebaseApp);
-        const db = getFirestore(firebaseApp);
-
-        // Authentication state
+        // Estado de autenticação
         let isAuthenticated = false;
-        let userId = null;
+        let userToken = null; // Token recebido do Apps Script após login
+        let userId = null; // Email do usuário logado
+        let userRole = null; // Papel do usuário (ex: 'admin', 'viewer')
 
-        // DOM elements
+        // Elementos DOM
         const loginModal = document.getElementById('login-modal');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
@@ -573,10 +571,10 @@
         const userIdDisplay = document.getElementById('user-id-display');
         const logoutBtn = document.getElementById('logout-btn');
 
-        // Initial data structure for Firestore
+        // Dados padrão para o painel
         const defaultDashboardData = {
             schoolName: 'Excelência Educacional',
-            weekNumber: 1, // Will be updated by getCurrentWeek
+            weekNumber: 1, // Será atualizado por getCurrentWeek
             year: new Date().getFullYear(),
             indicators: {
                 'elefante-input': 70,
@@ -598,12 +596,7 @@
             ]
         };
 
-        // Function to get the Firestore document reference for public data
-        function getDashboardDocRef() {
-            return doc(db, `artifacts/${appId}/public/data/dashboard`, 'main_data');
-        }
-
-        // Toggle password visibility
+        // Alternar visibilidade da senha
         togglePassword.addEventListener('click', function() {
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -616,14 +609,14 @@
             }
         });
 
-        // Show login modal
+        // Mostrar modal de login
         function showLoginModal() {
             if (isAuthenticated) return;
             loginModal.classList.add('show');
             emailInput.focus();
         }
 
-        // Hide login modal
+        // Esconder modal de login
         function hideLoginModal() {
             loginModal.classList.remove('show');
             emailInput.value = '';
@@ -631,14 +624,14 @@
             loginError.style.display = 'none';
         }
 
-        // Close modal when clicking outside
+        // Fechar modal ao clicar fora
         loginModal.addEventListener('click', function(e) {
             if (e.target === loginModal) {
                 hideLoginModal();
             }
         });
 
-        // Handle login
+        // Lidar com o login
         loginBtn.addEventListener('click', async function() {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
@@ -648,42 +641,59 @@
                 return;
             }
 
-            // Show loading state
+            // Mostrar estado de carregamento
             loginText.textContent = 'Verificando...';
             loginSpinner.classList.remove('hidden');
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
-                // onAuthStateChanged will handle UI update and data loading
-                hideLoginModal();
-                showToast('Login realizado com sucesso!');
-            } catch (error) {
-                console.error("Erro ao fazer login:", error.message);
-                let errorMessage = 'Usuário ou senha incorretos';
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMessage = 'Email ou senha inválidos.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Email inválido.';
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `data=${JSON.stringify({ email, password })}`
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    isAuthenticated = true;
+                    userToken = result.token;
+                    userId = result.userId;
+                    userRole = result.role;
+                    localStorage.setItem('userToken', userToken); // Armazenar token
+                    localStorage.setItem('userId', userId); // Armazenar userId
+                    localStorage.setItem('userRole', userRole); // Armazenar userRole
+                    updateAuthUI();
+                    loadDashboardData(); // Carregar dados após login
+                    hideLoginModal();
+                    showToast('Login realizado com sucesso!');
+                } else {
+                    showError(result.message || 'Erro desconhecido no login.');
                 }
-                showError(errorMessage);
+            } catch (error) {
+                console.error("Erro ao fazer login:", error);
+                showError('Erro de conexão. Tente novamente mais tarde.');
             } finally {
                 loginText.textContent = 'Entrar';
                 loginSpinner.classList.add('hidden');
             }
         });
 
-        // Handle logout
-        logoutBtn.addEventListener('click', async function() {
-            try {
-                await signOut(auth);
-                showToast('Logout realizado com sucesso!');
-            } catch (error) {
-                console.error("Erro ao fazer logout:", error.message);
-                showToast('Erro ao fazer logout.');
-            }
+        // Lidar com o logout
+        logoutBtn.addEventListener('click', function() {
+            isAuthenticated = false;
+            userToken = null;
+            userId = null;
+            userRole = null;
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userRole');
+            updateAuthUI();
+            loadDefaultData(); // Carregar dados padrão após logout
+            showToast('Logout realizado com sucesso!');
         });
 
-        // Show error message
+        // Mostrar mensagem de erro
         function showError(message) {
             loginError.textContent = message;
             loginError.style.display = 'block';
@@ -693,10 +703,10 @@
             }, 500);
         }
 
-        // Update UI based on authentication state
+        // Atualizar UI com base no estado de autenticação
         function updateAuthUI() {
             if (isAuthenticated) {
-                loginStatusText.textContent = 'Logado como Admin';
+                loginStatusText.textContent = `Logado como ${userRole === 'admin' ? 'Admin' : 'Usuário'}`;
                 userIdDisplay.textContent = `ID: ${userId}`;
                 userIdDisplay.classList.remove('hidden');
                 logoutBtn.classList.remove('hidden');
@@ -704,7 +714,7 @@
                     el.classList.add('bg-green-500/20');
                     el.classList.remove('bg-white/20');
                 });
-                makeFieldsEditable(true);
+                makeFieldsEditable(userRole === 'admin'); // Apenas admin pode editar
             } else {
                 loginStatusText.textContent = 'Não logado';
                 userIdDisplay.textContent = '';
@@ -718,7 +728,7 @@
             }
         }
 
-        // Make all input fields editable when authenticated
+        // Tornar campos editáveis (apenas para admin)
         function makeFieldsEditable(isEditable) {
             const editableInputs = [
                 'tarefasp-input', 'elefante-input', 'redacao-input', 'leia-input',
@@ -733,9 +743,13 @@
                     inputElement.readOnly = !isEditable;
                 }
             });
+            // Habilita/desabilita edição do nome da escola, semana e ano
+            document.getElementById('school-name').classList.toggle('editable', isEditable);
+            document.getElementById('week-number').classList.toggle('editable', isEditable);
+            document.getElementById('year').classList.toggle('editable', isEditable);
         }
 
-        // Toast notification function
+        // Função de notificação Toast
         function showToast(message) {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
@@ -746,91 +760,124 @@
             }, 3000);
         }
 
-        // Save data to Firestore
+        // Salvar dados via Apps Script
         async function saveData(key, value) {
-            if (!isAuthenticated) {
+            if (!isAuthenticated || userRole !== 'admin') {
                 showLoginModal();
                 return;
             }
+
+            // Obter os dados atuais do painel para enviar a atualização completa
+            const currentDashboardData = {
+                schoolName: document.getElementById('school-name').textContent,
+                weekNumber: parseInt(document.getElementById('week-number').textContent) || getCurrentWeek(),
+                year: parseInt(document.getElementById('year').textContent) || new Date().getFullYear(),
+                indicators: {},
+                classes: []
+            };
+
+            // Preencher indicadores
+            const indicatorInputs = ['elefante-input', 'tarefasp-input', 'redacao-input', 'leia-input',
+                'speak-input', 'alura-input', 'matific-input', 'khan-input', 'nota-input'];
+            indicatorInputs.forEach(id => {
+                currentDashboardData.indicators[id] = parseInt(document.getElementById(id).value) || 0;
+            });
+
+            // Preencher classes
+            for (let i = 1; i <= 5; i++) {
+                const name = document.getElementById(`class-${i}-name`).value;
+                const val = parseInt(document.getElementById(`class-${i}-value`).value) || 0;
+                currentDashboardData.classes.push({ name: name, value: val });
+            }
+
+            // Atualizar o campo específico que foi alterado
+            if (key === 'school-name') {
+                currentDashboardData.schoolName = value;
+            } else if (key === 'school-week') {
+                currentDashboardData.weekNumber = value;
+            } else if (key === 'school-year') {
+                currentDashboardData.year = value;
+            } else if (key.startsWith('class-') && key.endsWith('-name')) {
+                const index = parseInt(key.split('-')[1]) - 1;
+                if (currentDashboardData.classes[index]) currentDashboardData.classes[index].name = value;
+            } else if (key.startsWith('class-') && key.endsWith('-value')) {
+                const index = parseInt(key.split('-')[1]) - 1;
+                if (currentDashboardData.classes[index]) currentDashboardData.classes[index].value = value;
+            } else { // Assume é um indicador
+                currentDashboardData.indicators[key] = value;
+            }
+
             try {
-                const docRef = getDashboardDocRef();
-                // Fetch current data to merge, or use default if not exists
-                const currentData = await new Promise(resolve => {
-                    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-                        unsubscribe(); // Unsubscribe immediately after getting the first snapshot
-                        resolve(docSnap.exists() ? docSnap.data() : defaultDashboardData);
-                    }, (error) => {
-                        console.error("Error fetching current data for save:", error);
-                        resolve(defaultDashboardData); // Fallback to default on error
-                    });
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=saveData`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${userToken}` // Envia o token de autenticação
+                    },
+                    body: `data=${JSON.stringify({ dashboardData: currentDashboardData })}`
                 });
+                const result = await response.json();
 
-                let newData = { ...currentData };
-
-                if (key === 'school-name') {
-                    newData.schoolName = value;
-                } else if (key === 'school-week') {
-                    newData.weekNumber = value;
-                } else if (key === 'school-year') {
-                    newData.year = value;
-                } else if (key.startsWith('class-') && key.endsWith('-name')) {
-                    const index = parseInt(key.split('-')[1]) - 1;
-                    if (newData.classes[index]) newData.classes[index].name = value;
-                } else if (key.startsWith('class-') && key.endsWith('-value')) {
-                    const index = parseInt(key.split('-')[1]) - 1;
-                    if (newData.classes[index]) newData.classes[index].value = value;
-                } else { // Assume it's an indicator
-                    newData.indicators[key] = value;
+                if (result.success) {
+                    showToast('Alterações salvas com sucesso!');
+                } else {
+                    console.error("Erro ao salvar dados:", result.message);
+                    showToast('Erro ao salvar alterações.');
                 }
-
-                await setDoc(docRef, newData);
-                showToast('Alterações salvas com sucesso!');
             } catch (error) {
-                console.error("Erro ao salvar dados no Firestore:", error);
-                showToast('Erro ao salvar alterações.');
+                console.error("Erro ao salvar dados via Apps Script:", error);
+                showToast('Erro de conexão ao salvar.');
             }
         }
 
-        // Load data from Firestore and set up real-time listener
-        function loadDataFromFirestore() {
-            const docRef = getDashboardDocRef();
-            onSnapshot(docRef, (docSnap) => {
-                const data = docSnap.exists() ? docSnap.data() : defaultDashboardData;
-                
-                // Update school name
-                document.getElementById('school-name').textContent = data.schoolName;
-                document.getElementById('footer-school-name').textContent = data.schoolName;
-
-                // Update week and year
-                document.getElementById('week-number').textContent = data.weekNumber;
-                document.getElementById('year').textContent = data.year;
-
-                // Update indicators
-                for (const indicatorId in data.indicators) {
-                    const inputElement = document.getElementById(indicatorId);
-                    if (inputElement) {
-                        inputElement.value = data.indicators[indicatorId];
-                        // Manually trigger input event to update traffic light
-                        inputElement.dispatchEvent(new Event('input'));
-                    }
-                }
-
-                // Update classes
-                data.classes.forEach((classData, index) => {
-                    const classNameInput = document.getElementById(`class-${index + 1}-name`);
-                    const classValueInput = document.getElementById(`class-${index + 1}-value`);
-                    if (classNameInput) classNameInput.value = classData.name;
-                    if (classValueInput) classValueInput.value = classData.value;
+        // Carregar dados do Apps Script
+        async function loadDashboardData() {
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=getDashboardData`, {
+                    method: 'GET'
                 });
+                const result = await response.json();
 
-            }, (error) => {
-                console.error("Erro ao carregar dados do Firestore:", error);
-                // Fallback to default values if Firestore fails
-                loadDefaultData();
-            });
+                if (result.success && result.dashboardData) {
+                    const data = result.dashboardData;
+                    
+                    // Atualizar nome da escola
+                    document.getElementById('school-name').textContent = data.schoolName;
+                    document.getElementById('footer-school-name').textContent = data.schoolName;
+
+                    // Atualizar semana e ano
+                    document.getElementById('week-number').textContent = data.weekNumber;
+                    document.getElementById('year').textContent = data.year;
+
+                    // Atualizar indicadores
+                    for (const indicatorId in data.indicators) {
+                        const inputElement = document.getElementById(indicatorId);
+                        if (inputElement) {
+                            inputElement.value = data.indicators[indicatorId];
+                            // Dispara evento 'input' manualmente para atualizar o semáforo
+                            inputElement.dispatchEvent(new Event('input'));
+                        }
+                    }
+
+                    // Atualizar turmas
+                    data.classes.forEach((classData, index) => {
+                        const classNameInput = document.getElementById(`class-${index + 1}-name`);
+                        const classValueInput = document.getElementById(`class-${index + 1}-value`);
+                        if (classNameInput) classNameInput.value = classData.name;
+                        if (classValueInput) classValueInput.value = classData.value;
+                    });
+
+                } else {
+                    console.warn("Nenhum dado encontrado ou erro ao carregar do Apps Script:", result.message);
+                    loadDefaultData(); // Carregar dados padrão se Apps Script falhar
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados do Apps Script:", error);
+                loadDefaultData(); // Carregar dados padrão em caso de erro de rede
+            }
         }
 
-        // Fallback to default data if Firestore fails or is empty
+        // Carregar dados padrão se o Apps Script falhar ou estiver vazio
         function loadDefaultData() {
             document.getElementById('school-name').textContent = defaultDashboardData.schoolName;
             document.getElementById('footer-school-name').textContent = defaultDashboardData.schoolName;
@@ -841,7 +888,7 @@
                 const inputElement = document.getElementById(indicatorId);
                 if (inputElement) {
                     inputElement.value = defaultDashboardData.indicators[indicatorId];
-                    inputElement.dispatchEvent(new Event('input')); // Update traffic light
+                    inputElement.dispatchEvent(new Event('input')); // Atualiza o semáforo
                 }
             }
 
@@ -853,7 +900,7 @@
             });
         }
 
-        // Set current week
+        // Obter a semana atual
         function getCurrentWeek() {
             const now = new Date();
             const start = new Date(now.getFullYear(), 0, 1);
@@ -864,7 +911,7 @@
             return week;
         }
 
-        // Traffic light logic
+        // Lógica do semáforo
         function updateTrafficLight(inputId, lightId) {
             const input = document.getElementById(inputId);
             const light = document.getElementById(lightId);
@@ -879,12 +926,12 @@
                     } else {
                         light.classList.add('red');
                     }
-                    saveData(inputId, value); // Save on input change
+                    saveData(inputId, value); // Salvar na mudança do input
                 });
             }
         }
 
-        // Initialize all traffic lights
+        // Inicializar todos os semáforos
         const indicators = [
             { input: 'tarefasp-input', light: 'tarefasp-light' },
             { input: 'elefante-input', light: 'elefante-light' },
@@ -900,11 +947,11 @@
             updateTrafficLight(indicator.input, indicator.light);
         });
 
-        // Editable school name
+        // Nome da escola editável
         const schoolNameElement = document.getElementById('school-name');
         const footerSchoolNameElement = document.getElementById('footer-school-name');
         schoolNameElement.addEventListener('click', function() {
-            if (!isAuthenticated) {
+            if (!isAuthenticated || userRole !== 'admin') {
                 showLoginModal();
                 return;
             }
@@ -913,7 +960,7 @@
             input.type = 'text';
             input.value = currentName;
             input.className = 'editable-input';
-            input.style.width = (currentName.length * 10) + 'px'; // Adjust width dynamically
+            input.style.width = (currentName.length * 10) + 'px'; // Ajusta largura dinamicamente
             this.textContent = '';
             this.appendChild(input);
             input.focus();
@@ -930,54 +977,13 @@
             });
         });
 
-        // Editable week and year
-        const weekNumberElement = document.getElementById('week-number');
-        const yearElement = document.getElementById('year');
-        const currentWeekElement = document.getElementById('current-week'); // This element doesn't exist in the provided HTML, adding it for context.
-        // Assuming there's a parent element for week/year that triggers editing.
-        // If not, you might need to add a wrapper div around week-number and year with an ID like 'current-week-wrapper'
-        // For now, I'll add a listener to the header where the week and year might be displayed.
-        // If the user wants to edit the week and year, they should click on the text itself.
-        // Let's assume the week and year are part of a larger editable block or have their own click listeners.
-        // Since they are not directly editable inputs in the original code, I will make them editable on click.
-
-        // Add a placeholder element for current week/year if it's not explicitly in the HTML
-        // For this example, I'll assume they are within the header or a similar visible area.
-        // Let's add a div for them in the header for clarity.
-        // For now, I will add a click listener to the `school-name`'s parent for week/year editing.
-        // This is a simplification; in a real app, you'd have specific elements for these.
-        // Re-checking the original code, week-number and year are only in the script, not in HTML.
-        // I need to add them to the HTML first.
-
-        // Let's add a placeholder for week and year in the header for editing.
-        // I will add a new div in the header for 'current-week' and 'year'.
-        // Original code snippet for week/year:
-        // document.getElementById('week-number').textContent = savedWeek;
-        // document.getElementById('year').textContent = savedYear;
-        // This suggests they are displayed, but their HTML elements are missing.
-        // I'll add them to the header.
-
-        // Adding a basic structure for week and year in the header for demonstration
-        const headerDiv = document.querySelector('header .container > div');
-        if (headerDiv) {
-            const weekYearDiv = document.createElement('div');
-            weekYearDiv.className = 'flex items-center text-indigo-100 mt-2';
-            weekYearDiv.innerHTML = `
-                <i class="fas fa-calendar-alt mr-2"></i>
-                Semana: <span id="week-number" class="font-semibold editable ml-1"></span>
-                <span class="mx-2">/</span>
-                Ano: <span id="year" class="font-semibold editable ml-1"></span>
-            `;
-            // Insert after the school name block
-            headerDiv.insertBefore(weekYearDiv, headerDiv.children[1]);
-        }
-
+        // Semana e ano editáveis
         const weekElement = document.getElementById('week-number');
         const yearElem = document.getElementById('year');
 
         if (weekElement && yearElem) {
             weekElement.addEventListener('click', function() {
-                if (!isAuthenticated) { showLoginModal(); return; }
+                if (!isAuthenticated || userRole !== 'admin') { showLoginModal(); return; }
                 const currentWeek = this.textContent;
                 const input = document.createElement('input');
                 input.type = 'number';
@@ -1000,7 +1006,7 @@
             });
 
             yearElem.addEventListener('click', function() {
-                if (!isAuthenticated) { showLoginModal(); return; }
+                if (!isAuthenticated || userRole !== 'admin') { showLoginModal(); return; }
                 const currentYear = this.textContent;
                 const input = document.createElement('input');
                 input.type = 'number';
@@ -1023,15 +1029,14 @@
             });
         }
 
-
-        // Make class names and values editable
+        // Tornar nomes e valores das turmas editáveis
         for (let i = 1; i <= 5; i++) {
             const classNameInput = document.getElementById(`class-${i}-name`);
             const classValueInput = document.getElementById(`class-${i}-value`);
 
             if (classNameInput) {
                 classNameInput.addEventListener('click', function() {
-                    if (!isAuthenticated) {
+                    if (!isAuthenticated || userRole !== 'admin') {
                         showLoginModal();
                         this.blur();
                     }
@@ -1046,7 +1051,7 @@
 
             if (classValueInput) {
                 classValueInput.addEventListener('click', function() {
-                    if (!isAuthenticated) {
+                    if (!isAuthenticated || userRole !== 'admin') {
                         showLoginModal();
                         this.blur();
                     }
@@ -1062,7 +1067,7 @@
             }
         }
 
-        // Listen for keypress on protected inputs (all readonly inputs)
+        // Ouvir keypress em inputs protegidos (somente leitura)
         document.querySelectorAll('input[readonly]').forEach(input => {
             input.addEventListener('keydown', function(e) {
                 if (!isAuthenticated && e.key !== 'Tab') {
@@ -1077,40 +1082,23 @@
             });
         });
 
-        // Firebase Auth State Listener
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
+        // Carregar estado de autenticação e dados ao iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            userToken = localStorage.getItem('userToken');
+            userId = localStorage.getItem('userId');
+            userRole = localStorage.getItem('userRole');
+
+            if (userToken && userId && userRole) {
                 isAuthenticated = true;
-                userId = user.uid;
                 updateAuthUI();
-                loadDataFromFirestore(); // Load data once authenticated
+                loadDashboardData();
             } else {
                 isAuthenticated = false;
-                userId = null;
                 updateAuthUI();
-                loadDefaultData(); // Load default data if not authenticated
-                // Attempt anonymous sign-in if no initial token is provided
-                if (!initialAuthToken) {
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Erro ao fazer login anônimo:", error);
-                    }
-                }
+                loadDefaultData();
+                showLoginModal(); // Mostra o modal de login se não estiver autenticado
             }
         });
-
-        // Sign in with custom token if available (for Canvas environment)
-        if (initialAuthToken) {
-            signInWithCustomToken(auth, initialAuthToken).catch((error) => {
-                console.error("Erro ao fazer login com token personalizado:", error);
-            });
-        } else {
-            // If no custom token, sign in anonymously by default
-            signInAnonymously(auth).catch((error) => {
-                console.error("Erro ao fazer login anônimo:", error);
-            });
-        }
     </script>
 </body>
 </html>
