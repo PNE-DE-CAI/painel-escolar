@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Faróis Escolares</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .card {
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(255, 255, 255, 0.75);
+            border-radius: 12px;
+            border: 1px solid rgba(209, 213, 219, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-field {
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+
+        .footer-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+
+        .footer-wave svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 100px;
+        }
+
+        .footer-wave .shape-fill {
+            fill: #4F46E5;
+        }
+
+        .traffic-light {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .green {
+            background-color: #10B981;
+        }
+
+        .yellow {
+            background-color: #F59E0B;
+        }
+
+        .red {
+            background-color: #EF4444;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #4F46E5, #10B981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .editable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .editable:hover {
+            text-decoration: underline;
+        }
+
+        .editable-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid white;
+            color: white;
+            font-size: inherit;
+            font-weight: inherit;
+            width: auto;
+            padding: 0;
+            margin: 0;
+        }
+
+        .class-input {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px 4px;
+            text-align: center;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #10B981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4B5563;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #4F46E5;
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338CA;
+        }
+
+        .btn-secondary {
+            background-color: #EF4444;
+            color: white;
+            border: none;
+            margin-left: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background-color: #DC2626;
+        }
+
+        .text-error {
+            color: #EF4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 2.5rem;
+            cursor: pointer;
+            color: #9CA3AF;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Acesso Restrito</h2>
+                <p class="text-gray-600 mt-2">Por favor, faça login para editar</p>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Digite seu email">
+            </div>
+
+            <div class="input-group password-wrapper">
+                <label for="password">Senha</label>
+                <input type="password" id="password" placeholder="Digite sua senha">
+                <i class="fas fa-eye password-toggle" id="toggle-password"></i>
+            </div>
+
+            <p id="login-error" class="text-error">Email ou senha incorretos</p>
+
+            <div class="flex justify-between mt-6">
+                <button id="login-btn" class="btn btn-primary w-full">
+                    <span id="login-text">Entrar</span>
+                    <i id="login-spinner" class="fas fa-spinner fa-spin ml-2 hidden"></i>
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <small class="text-gray-500">Entre em contato com o administrador para obter acesso</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toast-message">Alterações salvas com sucesso!</span>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold">E.E. OLINDO DARTORA DR <span id="school-name" class="gradient-text editable">Excelência Educacional</span></h1>
+                    <p class="text-indigo-100">Painel de Desempenho Escolar</p>
+                </div>
+                <div class="flex items-center bg-white/20 rounded-full px-6 py-2 login-status">
+                    <i class="fas fa-user-shield mr-2"></i>
+                    <span id="login-status-text" class="font-semibold">Não logado</span>
+                    <span id="user-id-display" class="ml-2 text-sm text-indigo-100 hidden"></span>
+                    <button id="logout-btn" class="ml-4 px-3 py-1 bg-white text-indigo-600 rounded-full text-sm font-semibold hover:bg-gray-100 transition hidden">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Elefante Letrado -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="elefante-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">Exemplo</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="elefante-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Os ajustes vão de 0 zero a 100%</p>
+            </div>
+
+            <!-- TarefaSP -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="tarefasp-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">TarefaSP</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="tarefasp-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Desempenho nas tarefas escolares</p>
+            </div>
+
+            <!-- Redação -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="redacao-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">Redação</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="redacao-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Desempenho em produção textual</p>
+            </div>
+
+            <!-- Leia SP -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="leia-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">Leia SP</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="leia-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Frequência e compreensão de leitura</p>
+            </div>
+
+            <!-- SPeak -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="speak-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">SPeak</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="speak-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Habilidades de comunicação em inglês</p>
+            </div>
+
+            <!-- Alura -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="alura-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">Alura</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="alura-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Desempenho em programação e tecnologia</p>
+            </div>
+
+            <!-- Matific -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="matific-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">Matific</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="matific-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Habilidades matemáticas e lógicas</p>
+            </div>
+
+            <!-- Khan -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="khan-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">Khan</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="khan-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Desempenho em diversas disciplinas</p>
+            </div>
+
+            <!-- Nota Final -->
+            <div class="card p-6">
+                <div class="flex items-center mb-4">
+                    <div class="traffic-light" id="nota-light"></div>
+                    <h3 class="text-xl font-semibold text-gray-800">Aluno Presente</h3>
+                </div>
+                <div class="flex items-center">
+                    <input type="number" min="0" max="100" id="nota-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">Percentual de alunos presentes</p>
+            </div>
+        </div>
+
+        <!-- Top Classes Section -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+                <h2 class="text-xl font-bold text-white">Top 5 Turmas da Escola</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <!-- Class 1 -->
+                    <div class="bg-indigo-50 rounded-lg p-4 text-center">
+                        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-indigo-600 text-2xl font-bold">1°</span>
+                        </div>
+                        <h3 class="font-semibold text-indigo-800">
+                            <input type="text" value="9º Ano A" class="class-input" id="class-1-name" readonly>
+                        </h3>
+                        <p class="text-sm text-indigo-600">
+                            Alunos presentes: <input type="number" value="87" min="0" max="100" class="class-input" id="class-1-value" readonly>%
+                        </p>
+                    </div>
+                    <!-- Class 2 -->
+                    <div class="bg-purple-50 rounded-lg p-4 text-center">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-purple-600 text-2xl font-bold">2º</span>
+                        </div>
+                        <h3 class="font-semibold text-purple-800">
+                            <input type="text" value="8º Ano B" class="class-input" id="class-2-name" readonly>
+                        </h3>
+                        <p class="text-sm text-purple-600">
+                            Alunos presentes: <input type="number" value="85" min="0" max="100" class="class-input" id="class-2-value" readonly>%
+                        </p>
+                    </div>
+                    <!-- Class 3 -->
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-blue-600 text-2xl font-bold">3º</span>
+                        </div>
+                        <h3 class="font-semibold text-blue-800">
+                            <input type="text" value="7º Ano A" class="class-input" id="class-3-name" readonly>
+                        </h3>
+                        <p class="text-sm text-blue-600">
+                            Alunos presentes: <input type="number" value="82" min="0" max="100" class="class-input" id="class-3-value" readonly>%
+                        </p>
+                    </div>
+                    <!-- Class 4 -->
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-green-600 text-2xl font-bold">4º</span>
+                        </div>
+                        <h3 class="font-semibold text-green-800">
+                            <input type="text" value="6º Ano C" class="class-input" id="class-4-name" readonly>
+                        </h3>
+                        <p class="text-sm text-green-600">
+                            Alunos presentes: <input type="number" value="80" min="0" max="100" class="class-input" id="class-4-value" readonly>%
+                        </p>
+                    </div>
+                    <!-- Class 5 -->
+                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-yellow-600 text-2xl font-bold">5º</span>
+                        </div>
+                        <h3 class="font-semibold text-yellow-800">
+                            <input type="text" value="9º Ano C" class="class-input" id="class-5-name" readonly>
+                        </h3>
+                        <p class="text-sm text-yellow-600">
+                            Alunos presentes: <input type="number" value="78" min="0" max="100" class="class-input" id="class-5-value" readonly>%
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white relative">
+        <div class="footer-wave">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+            </svg>
+        </div>
+        <div class="container mx-auto px-4 py-8 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-xl font-bold">Painel de Faróis Escolares</h3>
+                    <p class="text-indigo-200">Acompanhamento de desempenho educacional</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-indigo-200 text-sm">
+                <p>Desenvolvido com <i class="fas fa-heart text-red-300"></i> pela Equipe de Tecnologia Educacional NPC - DE CAIEIRAS 2025</p>
+                <p class="mt-1">© 2025 Escola <span id="footer-school-name">Excelência Educacional</span>. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        // Firebase imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firebase initialization
+        const firebaseApp = initializeApp(firebaseConfig);
+        const auth = getAuth(firebaseApp);
+        const db = getFirestore(firebaseApp);
+
+        // Authentication state
+        let isAuthenticated = false;
+        let userId = null;
+
+        // DOM elements
+        const loginModal = document.getElementById('login-modal');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const togglePassword = document.getElementById('toggle-password');
+        const loginText = document.getElementById('login-text');
+        const loginSpinner = document.getElementById('login-spinner');
+        const loginStatusText = document.getElementById('login-status-text');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Initial data structure for Firestore
+        const defaultDashboardData = {
+            schoolName: 'Excelência Educacional',
+            weekNumber: 1, // Will be updated by getCurrentWeek
+            year: new Date().getFullYear(),
+            indicators: {
+                'elefante-input': 70,
+                'tarefasp-input': 75,
+                'redacao-input': 80,
+                'leia-input': 65,
+                'speak-input': 60,
+                'alura-input': 85,
+                'matific-input': 78,
+                'khan-input': 72,
+                'nota-input': 90
+            },
+            classes: [
+                { name: '9º Ano A', value: 87 },
+                { name: '8º Ano B', value: 85 },
+                { name: '7º Ano A', value: 82 },
+                { name: '6º Ano C', value: 80 },
+                { name: '9º Ano C', value: 78 }
+            ]
+        };
+
+        // Function to get the Firestore document reference for public data
+        function getDashboardDocRef() {
+            return doc(db, `artifacts/${appId}/public/data/dashboard`, 'main_data');
+        }
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.classList.remove('fa-eye');
+                this.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                this.classList.remove('fa-eye-slash');
+                this.classList.add('fa-eye');
+            }
+        });
+
+        // Show login modal
+        function showLoginModal() {
+            if (isAuthenticated) return;
+            loginModal.classList.add('show');
+            emailInput.focus();
+        }
+
+        // Hide login modal
+        function hideLoginModal() {
+            loginModal.classList.remove('show');
+            emailInput.value = '';
+            passwordInput.value = '';
+            loginError.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        loginModal.addEventListener('click', function(e) {
+            if (e.target === loginModal) {
+                hideLoginModal();
+            }
+        });
+
+        // Handle login
+        loginBtn.addEventListener('click', async function() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!email || !password) {
+                showError('Por favor, preencha todos os campos');
+                return;
+            }
+
+            // Show loading state
+            loginText.textContent = 'Verificando...';
+            loginSpinner.classList.remove('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged will handle UI update and data loading
+                hideLoginModal();
+                showToast('Login realizado com sucesso!');
+            } catch (error) {
+                console.error("Erro ao fazer login:", error.message);
+                let errorMessage = 'Usuário ou senha incorretos';
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage = 'Email ou senha inválidos.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Email inválido.';
+                }
+                showError(errorMessage);
+            } finally {
+                loginText.textContent = 'Entrar';
+                loginSpinner.classList.add('hidden');
+            }
+        });
+
+        // Handle logout
+        logoutBtn.addEventListener('click', async function() {
+            try {
+                await signOut(auth);
+                showToast('Logout realizado com sucesso!');
+            } catch (error) {
+                console.error("Erro ao fazer logout:", error.message);
+                showToast('Erro ao fazer logout.');
+            }
+        });
+
+        // Show error message
+        function showError(message) {
+            loginError.textContent = message;
+            loginError.style.display = 'block';
+            loginModal.querySelector('.modal-content').classList.add('shake');
+            setTimeout(() => {
+                loginModal.querySelector('.modal-content').classList.remove('shake');
+            }, 500);
+        }
+
+        // Update UI based on authentication state
+        function updateAuthUI() {
+            if (isAuthenticated) {
+                loginStatusText.textContent = 'Logado como Admin';
+                userIdDisplay.textContent = `ID: ${userId}`;
+                userIdDisplay.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                document.querySelectorAll('.login-status').forEach(el => {
+                    el.classList.add('bg-green-500/20');
+                    el.classList.remove('bg-white/20');
+                });
+                makeFieldsEditable(true);
+            } else {
+                loginStatusText.textContent = 'Não logado';
+                userIdDisplay.textContent = '';
+                userIdDisplay.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                document.querySelectorAll('.login-status').forEach(el => {
+                    el.classList.add('bg-white/20');
+                    el.classList.remove('bg-green-500/20');
+                });
+                makeFieldsEditable(false);
+            }
+        }
+
+        // Make all input fields editable when authenticated
+        function makeFieldsEditable(isEditable) {
+            const editableInputs = [
+                'tarefasp-input', 'elefante-input', 'redacao-input', 'leia-input',
+                'speak-input', 'alura-input', 'matific-input', 'khan-input', 'nota-input',
+                'class-1-name', 'class-1-value', 'class-2-name', 'class-2-value',
+                'class-3-name', 'class-3-value', 'class-4-name', 'class-4-value',
+                'class-5-name', 'class-5-value'
+            ];
+            editableInputs.forEach(id => {
+                const inputElement = document.getElementById(id);
+                if (inputElement) {
+                    inputElement.readOnly = !isEditable;
+                }
+            });
+        }
+
+        // Toast notification function
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Save data to Firestore
+        async function saveData(key, value) {
+            if (!isAuthenticated) {
+                showLoginModal();
+                return;
+            }
+            try {
+                const docRef = getDashboardDocRef();
+                // Fetch current data to merge, or use default if not exists
+                const currentData = await new Promise(resolve => {
+                    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                        unsubscribe(); // Unsubscribe immediately after getting the first snapshot
+                        resolve(docSnap.exists() ? docSnap.data() : defaultDashboardData);
+                    }, (error) => {
+                        console.error("Error fetching current data for save:", error);
+                        resolve(defaultDashboardData); // Fallback to default on error
+                    });
+                });
+
+                let newData = { ...currentData };
+
+                if (key === 'school-name') {
+                    newData.schoolName = value;
+                } else if (key === 'school-week') {
+                    newData.weekNumber = value;
+                } else if (key === 'school-year') {
+                    newData.year = value;
+                } else if (key.startsWith('class-') && key.endsWith('-name')) {
+                    const index = parseInt(key.split('-')[1]) - 1;
+                    if (newData.classes[index]) newData.classes[index].name = value;
+                } else if (key.startsWith('class-') && key.endsWith('-value')) {
+                    const index = parseInt(key.split('-')[1]) - 1;
+                    if (newData.classes[index]) newData.classes[index].value = value;
+                } else { // Assume it's an indicator
+                    newData.indicators[key] = value;
+                }
+
+                await setDoc(docRef, newData);
+                showToast('Alterações salvas com sucesso!');
+            } catch (error) {
+                console.error("Erro ao salvar dados no Firestore:", error);
+                showToast('Erro ao salvar alterações.');
+            }
+        }
+
+        // Load data from Firestore and set up real-time listener
+        function loadDataFromFirestore() {
+            const docRef = getDashboardDocRef();
+            onSnapshot(docRef, (docSnap) => {
+                const data = docSnap.exists() ? docSnap.data() : defaultDashboardData;
+                
+                // Update school name
+                document.getElementById('school-name').textContent = data.schoolName;
+                document.getElementById('footer-school-name').textContent = data.schoolName;
+
+                // Update week and year
+                document.getElementById('week-number').textContent = data.weekNumber;
+                document.getElementById('year').textContent = data.year;
+
+                // Update indicators
+                for (const indicatorId in data.indicators) {
+                    const inputElement = document.getElementById(indicatorId);
+                    if (inputElement) {
+                        inputElement.value = data.indicators[indicatorId];
+                        // Manually trigger input event to update traffic light
+                        inputElement.dispatchEvent(new Event('input'));
+                    }
+                }
+
+                // Update classes
+                data.classes.forEach((classData, index) => {
+                    const classNameInput = document.getElementById(`class-${index + 1}-name`);
+                    const classValueInput = document.getElementById(`class-${index + 1}-value`);
+                    if (classNameInput) classNameInput.value = classData.name;
+                    if (classValueInput) classValueInput.value = classData.value;
+                });
+
+            }, (error) => {
+                console.error("Erro ao carregar dados do Firestore:", error);
+                // Fallback to default values if Firestore fails
+                loadDefaultData();
+            });
+        }
+
+        // Fallback to default data if Firestore fails or is empty
+        function loadDefaultData() {
+            document.getElementById('school-name').textContent = defaultDashboardData.schoolName;
+            document.getElementById('footer-school-name').textContent = defaultDashboardData.schoolName;
+            document.getElementById('week-number').textContent = getCurrentWeek();
+            document.getElementById('year').textContent = new Date().getFullYear();
+
+            for (const indicatorId in defaultDashboardData.indicators) {
+                const inputElement = document.getElementById(indicatorId);
+                if (inputElement) {
+                    inputElement.value = defaultDashboardData.indicators[indicatorId];
+                    inputElement.dispatchEvent(new Event('input')); // Update traffic light
+                }
+            }
+
+            defaultDashboardData.classes.forEach((classData, index) => {
+                const classNameInput = document.getElementById(`class-${index + 1}-name`);
+                const classValueInput = document.getElementById(`class-${index + 1}-value`);
+                if (classNameInput) classNameInput.value = classData.name;
+                if (classValueInput) classValueInput.value = classData.value;
+            });
+        }
+
+        // Set current week
+        function getCurrentWeek() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 1);
+            const diff = now - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            const day = Math.floor(diff / oneDay);
+            const week = Math.ceil(day / 7);
+            return week;
+        }
+
+        // Traffic light logic
+        function updateTrafficLight(inputId, lightId) {
+            const input = document.getElementById(inputId);
+            const light = document.getElementById(lightId);
+            if (input && light) {
+                input.addEventListener('input', function() {
+                    const value = parseInt(this.value) || 0;
+                    light.classList.remove('green', 'yellow', 'red');
+                    if (value >= 80) {
+                        light.classList.add('green');
+                    } else if (value >= 50) {
+                        light.classList.add('yellow');
+                    } else {
+                        light.classList.add('red');
+                    }
+                    saveData(inputId, value); // Save on input change
+                });
+            }
+        }
+
+        // Initialize all traffic lights
+        const indicators = [
+            { input: 'tarefasp-input', light: 'tarefasp-light' },
+            { input: 'elefante-input', light: 'elefante-light' },
+            { input: 'redacao-input', light: 'redacao-light' },
+            { input: 'leia-input', light: 'leia-light' },
+            { input: 'speak-input', light: 'speak-light' },
+            { input: 'alura-input', light: 'alura-light' },
+            { input: 'matific-input', light: 'matific-light' },
+            { input: 'khan-input', light: 'khan-light' },
+            { input: 'nota-input', light: 'nota-light' }
+        ];
+        indicators.forEach(indicator => {
+            updateTrafficLight(indicator.input, indicator.light);
+        });
+
+        // Editable school name
+        const schoolNameElement = document.getElementById('school-name');
+        const footerSchoolNameElement = document.getElementById('footer-school-name');
+        schoolNameElement.addEventListener('click', function() {
+            if (!isAuthenticated) {
+                showLoginModal();
+                return;
+            }
+            const currentName = this.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'editable-input';
+            input.style.width = (currentName.length * 10) + 'px'; // Adjust width dynamically
+            this.textContent = '';
+            this.appendChild(input);
+            input.focus();
+            input.addEventListener('blur', function() {
+                const newName = this.value.trim() || defaultDashboardData.schoolName;
+                schoolNameElement.textContent = newName;
+                footerSchoolNameElement.textContent = newName;
+                saveData('school-name', newName);
+            });
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    this.blur();
+                }
+            });
+        });
+
+        // Editable week and year
+        const weekNumberElement = document.getElementById('week-number');
+        const yearElement = document.getElementById('year');
+        const currentWeekElement = document.getElementById('current-week'); // This element doesn't exist in the provided HTML, adding it for context.
+        // Assuming there's a parent element for week/year that triggers editing.
+        // If not, you might need to add a wrapper div around week-number and year with an ID like 'current-week-wrapper'
+        // For now, I'll add a listener to the header where the week and year might be displayed.
+        // If the user wants to edit the week and year, they should click on the text itself.
+        // Let's assume the week and year are part of a larger editable block or have their own click listeners.
+        // Since they are not directly editable inputs in the original code, I will make them editable on click.
+
+        // Add a placeholder element for current week/year if it's not explicitly in the HTML
+        // For this example, I'll assume they are within the header or a similar visible area.
+        // Let's add a div for them in the header for clarity.
+        // For now, I will add a click listener to the `school-name`'s parent for week/year editing.
+        // This is a simplification; in a real app, you'd have specific elements for these.
+        // Re-checking the original code, week-number and year are only in the script, not in HTML.
+        // I need to add them to the HTML first.
+
+        // Let's add a placeholder for week and year in the header for editing.
+        // I will add a new div in the header for 'current-week' and 'year'.
+        // Original code snippet for week/year:
+        // document.getElementById('week-number').textContent = savedWeek;
+        // document.getElementById('year').textContent = savedYear;
+        // This suggests they are displayed, but their HTML elements are missing.
+        // I'll add them to the header.
+
+        // Adding a basic structure for week and year in the header for demonstration
+        const headerDiv = document.querySelector('header .container > div');
+        if (headerDiv) {
+            const weekYearDiv = document.createElement('div');
+            weekYearDiv.className = 'flex items-center text-indigo-100 mt-2';
+            weekYearDiv.innerHTML = `
+                <i class="fas fa-calendar-alt mr-2"></i>
+                Semana: <span id="week-number" class="font-semibold editable ml-1"></span>
+                <span class="mx-2">/</span>
+                Ano: <span id="year" class="font-semibold editable ml-1"></span>
+            `;
+            // Insert after the school name block
+            headerDiv.insertBefore(weekYearDiv, headerDiv.children[1]);
+        }
+
+        const weekElement = document.getElementById('week-number');
+        const yearElem = document.getElementById('year');
+
+        if (weekElement && yearElem) {
+            weekElement.addEventListener('click', function() {
+                if (!isAuthenticated) { showLoginModal(); return; }
+                const currentWeek = this.textContent;
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = currentWeek;
+                input.className = 'editable-input';
+                input.style.width = '40px';
+                input.min = '1';
+                input.max = '52';
+                this.textContent = '';
+                this.appendChild(input);
+                input.focus();
+                input.addEventListener('blur', function() {
+                    const newWeek = parseInt(this.value) || getCurrentWeek();
+                    weekElement.textContent = newWeek;
+                    saveData('school-week', newWeek);
+                });
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') { this.blur(); }
+                });
+            });
+
+            yearElem.addEventListener('click', function() {
+                if (!isAuthenticated) { showLoginModal(); return; }
+                const currentYear = this.textContent;
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = currentYear;
+                input.className = 'editable-input';
+                input.style.width = '60px';
+                input.min = '2000';
+                input.max = '2100';
+                this.textContent = '';
+                this.appendChild(input);
+                input.focus();
+                input.addEventListener('blur', function() {
+                    const newYear = parseInt(this.value) || new Date().getFullYear();
+                    yearElem.textContent = newYear;
+                    saveData('school-year', newYear);
+                });
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') { this.blur(); }
+                });
+            });
+        }
+
+
+        // Make class names and values editable
+        for (let i = 1; i <= 5; i++) {
+            const classNameInput = document.getElementById(`class-${i}-name`);
+            const classValueInput = document.getElementById(`class-${i}-value`);
+
+            if (classNameInput) {
+                classNameInput.addEventListener('click', function() {
+                    if (!isAuthenticated) {
+                        showLoginModal();
+                        this.blur();
+                    }
+                });
+                classNameInput.addEventListener('change', function() {
+                    if (!this.value.trim()) {
+                        this.value = `Turma ${i}`;
+                    }
+                    saveData(`class-${i}-name`, this.value);
+                });
+            }
+
+            if (classValueInput) {
+                classValueInput.addEventListener('click', function() {
+                    if (!isAuthenticated) {
+                        showLoginModal();
+                        this.blur();
+                    }
+                });
+                classValueInput.addEventListener('change', function() {
+                    let value = parseInt(this.value);
+                    if (isNaN(value)) value = 0;
+                    if (value < 0) value = 0;
+                    if (value > 100) value = 100;
+                    this.value = value;
+                    saveData(`class-${i}-value`, value);
+                });
+            }
+        }
+
+        // Listen for keypress on protected inputs (all readonly inputs)
+        document.querySelectorAll('input[readonly]').forEach(input => {
+            input.addEventListener('keydown', function(e) {
+                if (!isAuthenticated && e.key !== 'Tab') {
+                    e.preventDefault();
+                    showLoginModal();
+                }
+            });
+            input.addEventListener('click', function() {
+                if (!isAuthenticated) {
+                    showLoginModal();
+                }
+            });
+        });
+
+        // Firebase Auth State Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                isAuthenticated = true;
+                userId = user.uid;
+                updateAuthUI();
+                loadDataFromFirestore(); // Load data once authenticated
+            } else {
+                isAuthenticated = false;
+                userId = null;
+                updateAuthUI();
+                loadDefaultData(); // Load default data if not authenticated
+                // Attempt anonymous sign-in if no initial token is provided
+                if (!initialAuthToken) {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (error) {
+                        console.error("Erro ao fazer login anônimo:", error);
+                    }
+                }
+            }
+        });
+
+        // Sign in with custom token if available (for Canvas environment)
+        if (initialAuthToken) {
+            signInWithCustomToken(auth, initialAuthToken).catch((error) => {
+                console.error("Erro ao fazer login com token personalizado:", error);
+            });
+        } else {
+            // If no custom token, sign in anonymously by default
+            signInAnonymously(auth).catch((error) => {
+                console.error("Erro ao fazer login anônimo:", error);
+            });
+        }
+    </script>
+</body>
+</html>
