@@ -77,7 +77,7 @@
             background-color: #EF4444;
         }
 
-        .gradient-text {
+         .gradient-text {
             background: linear-gradient(90deg, #e546a0, #b0b910);
             -webkit-background-clip: text;
             background-clip: text;
@@ -85,24 +85,8 @@
         }
 
         .editable {
-            cursor: pointer;
+            cursor: default; /* No pointer for non-editable */
             position: relative;
-        }
-
-        .editable:hover {
-            text-decoration: underline;
-        }
-
-        .editable-input {
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid white;
-            color: white;
-            font-size: inherit;
-            font-weight: inherit;
-            width: auto;
-            padding: 0;
-            margin: 0;
         }
 
         .class-input {
@@ -112,349 +96,149 @@
             padding: 2px 4px;
             text-align: center;
         }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #10B981;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            transform: translateY(-20px);
-            transition: transform 0.3s ease;
-        }
-
-        .modal.show .modal-content {
-            transform: translateY(0);
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #4B5563;
-            font-weight: 500;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #D1D5DB;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #4F46E5;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background-color: #4F46E5;
-            color: white;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background-color: #4338CA;
-        }
-
-        .btn-secondary {
-            background-color: #EF4444;
-            color: white;
-            border: none;
-            margin-left: 1rem;
-        }
-
-        .btn-secondary:hover {
-            background-color: #DC2626;
-        }
-
-        .text-error {
-            color: #EF4444;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 0.75rem;
-            top: 2.5rem;
-            cursor: pointer;
-            color: #9CA3AF;
-        }
-
-        .password-wrapper {
-            position: relative;
-        }
-
-        .shake {
-            animation: shake 0.5s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-5px); }
-            40%, 80% { transform: translateX(5px); }
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">Acesso Restrito</h2>
-                <p class="text-gray-600 mt-2">Por favor, faça login para editar</p>
-            </div>
-
-            <div class="input-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" placeholder="Digite seu email">
-            </div>
-
-            <div class="input-group password-wrapper">
-                <label for="password">Senha</label>
-                <input type="password" id="password" placeholder="Digite sua senha">
-                <i class="fas fa-eye password-toggle" id="toggle-password"></i>
-            </div>
-
-            <p id="login-error" class="text-error">Email ou senha incorretos</p>
-
-            <div class="flex justify-between mt-6">
-                <button id="login-btn" class="btn btn-primary w-full">
-                    <span id="login-text">Entrar</span>
-                    <i id="login-spinner" class="fas fa-spinner fa-spin ml-2 hidden"></i>
-                </button>
-            </div>
-            <div class="mt-4 text-center">
-                <small class="text-gray-500">Entre em contato com o administrador para obter acesso</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <span id="toast-message">Alterações salvas com sucesso!</span>
-    </div>
-
-    <!-- Header -->
     <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
         <div class="container mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-4 md:mb-0">
-                    <h1 class="text-3xl font-bold">E.E. OLINDO DARTORA DR <span id="school-name" class="gradient-text editable">Excelência Educacional</span></h1>
+                    <h1 class="text-3xl font-bold">E.E. OLINDO DARTORA DR <span id="school-name" class="gradient-text">Excelência Educacional</span></h1>
                     <p class="text-indigo-100">Painel de Desempenho Escolar</p>
-                    <!-- Added week and year display -->
                     <div class="flex items-center text-indigo-100 mt-2">
                         <i class="fas fa-calendar-alt mr-2"></i>
-                        Semana: <span id="week-number" class="font-semibold editable ml-1"></span>
+                        Semana: <span id="week-number" class="font-semibold ml-1"></span>
                         <span class="mx-2">/</span>
-                        Ano: <span id="year" class="font-semibold editable ml-1"></span>
+                        Ano: <span id="year" class="font-semibold ml-1"></span>
                     </div>
                 </div>
                 <div class="flex items-center bg-white/20 rounded-full px-6 py-2 login-status">
                     <i class="fas fa-user-shield mr-2"></i>
-                    <span id="login-status-text" class="font-semibold">Não logado</span>
+                    <span id="login-status-text" class="font-semibold">Modo Leitura</span>
                     <span id="user-id-display" class="ml-2 text-sm text-indigo-100 hidden"></span>
-                    <button id="logout-btn" class="ml-4 px-3 py-1 bg-white text-indigo-600 rounded-full text-sm font-semibold hover:bg-gray-100 transition hidden">Sair</button>
-                    <!-- Save button, visible only when logged in as admin -->
-                    <button id="save-btn" class="ml-4 px-3 py-1 bg-green-500 text-white rounded-full text-sm font-semibold hover:bg-green-600 transition hidden">
-                        <i class="fas fa-save mr-2"></i>Salvar Tudo
-                    </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 py-8">
-        <!-- Dashboard Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Elefante Letrado -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="elefante-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">Exemplo</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="elefante-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="elefante-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Os ajustes vão de 0 zero a 100%</p>
             </div>
 
-            <!-- TarefaSP -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="tarefasp-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">TarefaSP</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="tarefasp-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="tarefasp-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Desempenho nas tarefas escolares</p>
             </div>
 
-            <!-- Redação -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="redacao-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">Redação</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="redacao-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="redacao-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Desempenho em produção textual</p>
             </div>
 
-            <!-- Leia SP -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="leia-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">Leia SP</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="leia-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="leia-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Frequência e compreensão de leitura</p>
             </div>
 
-            <!-- SPeak -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="speak-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">SPeak</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="speak-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="speak-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Habilidades de comunicação em inglês</p>
             </div>
 
-            <!-- Alura -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="alura-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">Alura</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="alura-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="alura-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Desempenho em programação e tecnologia</p>
             </div>
 
-            <!-- Matific -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="matific-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">Matific</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="matific-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="matific-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Habilidades matemáticas e lógicas</p>
             </div>
 
-            <!-- Khan -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="khan-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">Khan</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="khan-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="khan-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Desempenho em diversas disciplinas</p>
             </div>
 
-            <!-- Nota Final -->
             <div class="card p-6">
                 <div class="flex items-center mb-4">
                     <div class="traffic-light" id="nota-light"></div>
                     <h3 class="text-xl font-semibold text-gray-800">Aluno Presente</h3>
                 </div>
                 <div class="flex items-center">
-                    <input type="number" min="0" max="100" id="nota-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" readonly>
+                    <input type="number" min="0" max="100" id="nota-input" class="input-field w-24 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none" readonly>
                     <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-r-lg">%</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-500">Percentual de alunos presentes</p>
             </div>
         </div>
 
-        <!-- Top Classes Section -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
                 <h2 class="text-xl font-bold text-white">Top 5 Turmas da Escola</h2>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <!-- Class 1 -->
                     <div class="bg-indigo-50 rounded-lg p-4 text-center">
                         <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <span class="text-indigo-600 text-2xl font-bold">1°</span>
@@ -466,7 +250,6 @@
                             Alunos presentes: <input type="number" value="87" min="0" max="100" class="class-input" id="class-1-value" readonly>%
                         </p>
                     </div>
-                    <!-- Class 2 -->
                     <div class="bg-purple-50 rounded-lg p-4 text-center">
                         <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <span class="text-purple-600 text-2xl font-bold">2º</span>
@@ -478,7 +261,6 @@
                             Alunos presentes: <input type="number" value="85" min="0" max="100" class="class-input" id="class-2-value" readonly>%
                         </p>
                     </div>
-                    <!-- Class 3 -->
                     <div class="bg-blue-50 rounded-lg p-4 text-center">
                         <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <span class="text-blue-600 text-2xl font-bold">3º</span>
@@ -490,7 +272,6 @@
                             Alunos presentes: <input type="number" value="82" min="0" max="100" class="class-input" id="class-3-value" readonly>%
                         </p>
                     </div>
-                    <!-- Class 4 -->
                     <div class="bg-green-50 rounded-lg p-4 text-center">
                         <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <span class="text-green-600 text-2xl font-bold">4º</span>
@@ -502,7 +283,6 @@
                             Alunos presentes: <input type="number" value="80" min="0" max="100" class="class-input" id="class-4-value" readonly>%
                         </p>
                     </div>
-                    <!-- Class 5 -->
                     <div class="bg-yellow-50 rounded-lg p-4 text-center">
                         <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <span class="text-yellow-600 text-2xl font-bold">5º</span>
@@ -519,7 +299,6 @@
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white relative">
         <div class="footer-wave">
             <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -554,31 +333,12 @@
     <script>
         // COLOQUE A URL DO SEU GOOGLE APPS SCRIPT AQUI
         // Exemplo: const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfyc.../exec';
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6jqbmZ3KoB91OG3vwrAVEcVHJ46jEwVftnybqew_jHuq4mVk4R2RwV6mwUAtKUQJA/exec'; 
-        // Authentication state
-        let isAuthenticated = false;
-        let userToken = null; // Token received from Apps Script after login
-        let userId = null; // Logged-in user's email
-        let userRole = null; // User role (e.g., 'admin', 'viewer')
-
-        // DOM Elements
-        const loginModal = document.getElementById('login-modal');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const loginBtn = document.getElementById('login-btn');
-        const loginError = document.getElementById('login-error');
-        const togglePassword = document.getElementById('toggle-password');
-        const loginText = document.getElementById('login-text');
-        const loginSpinner = document.getElementById('login-spinner');
-        const loginStatusText = document.getElementById('login-status-text');
-        const userIdDisplay = document.getElementById('user-id-display');
-        const logoutBtn = document.getElementById('logout-btn');
-        const saveBtn = document.getElementById('save-btn'); // Save button
-
-        // Default dashboard data
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCXALRfxRkJzItCGHQl2TCfbPDm2ZDjTkCGJDT1-A47vLX0c-C_Ub0jqTDaas1SQXp/exec'; 
+        
+        // Default dashboard data (fallback if API fails)
         const defaultDashboardData = {
             schoolName: 'Excelência Educacional',
-            weekNumber: 1, // Will be updated by getCurrentWeek
+            weekNumber: 1, 
             year: new Date().getFullYear(),
             indicators: {
                 'elefante-input': 70,
@@ -600,275 +360,6 @@
             ]
         };
 
-        // Toggle password visibility
-        togglePassword.addEventListener('click', function() {
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.classList.remove('fa-eye');
-                this.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                this.classList.remove('fa-eye-slash');
-                this.classList.add('fa-eye');
-            }
-        });
-
-        // Show login modal
-        function showLoginModal() {
-            if (isAuthenticated) return;
-            loginModal.classList.add('show');
-            emailInput.focus();
-        }
-
-        // Hide login modal
-        function hideLoginModal() {
-            loginModal.classList.remove('show');
-            emailInput.value = '';
-            passwordInput.value = '';
-            loginError.style.display = 'none';
-        }
-
-        // Close modal on outside click
-        loginModal.addEventListener('click', function(e) {
-            if (e.target === loginModal) {
-                hideLoginModal();
-            }
-        });
-
-        // Handle login
-        loginBtn.addEventListener('click', async function() {
-            const email = emailInput.value.trim();
-            const password = passwordInput.value.trim();
-
-            if (!email || !password) {
-                showError('Por favor, preencha todos os campos');
-                return;
-            }
-
-            // Show loading state
-            loginText.textContent = 'Verificando...';
-            loginSpinner.classList.remove('hidden');
-
-            try {
-                // Send email and password as URL-encoded parameters directly
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    // The request body can be empty or contain additional data if needed by Apps Script
-                    body: '' 
-                });
-
-                // Log response status for debugging
-                console.log('Login Response Status:', response.status, response.statusText);
-                if (!response.ok) { // Check if response status is not 2xx
-                    const errorText = await response.text();
-                    console.error('Login Response Body (Error):', errorText);
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                if (result.success) {
-                    isAuthenticated = true;
-                    userToken = result.token;
-                    userId = result.userId;
-                    userRole = result.role;
-                    localStorage.setItem('userToken', userToken); // Store token
-                    localStorage.setItem('userId', userId); // Store userId
-                    localStorage.setItem('userRole', userRole); // Store userRole
-                    updateAuthUI();
-                    loadDashboardData(); // Load data after login
-                    hideLoginModal();
-                    showToast('Login realizado com sucesso!');
-                } else {
-                    showError(result.message || 'Erro desconhecido no login.');
-                }
-            } catch (error) {
-                console.error("Erro ao fazer login:", error);
-                showError('Erro de conexão. Tente novamente mais tarde.');
-            } finally {
-                loginText.textContent = 'Entrar';
-                loginSpinner.classList.add('hidden');
-            }
-        });
-
-        // Handle logout
-        logoutBtn.addEventListener('click', function() {
-            isAuthenticated = false;
-            userToken = null;
-            userId = null;
-            userRole = null;
-            localStorage.removeItem('userToken');
-            localStorage.removeItem('userId');
-            localStorage.removeItem('userRole');
-            updateAuthUI();
-            loadDefaultData(); // Load default data after logout
-            showToast('Logout realizado com sucesso!');
-        });
-
-        // Handle save button click
-        saveBtn.addEventListener('click', async function() {
-            await saveData(); // Call the saveData function
-        });
-
-        // Show error message
-        function showError(message) {
-            loginError.textContent = message;
-            loginError.style.display = 'block';
-            loginModal.querySelector('.modal-content').classList.add('shake');
-            setTimeout(() => {
-                loginModal.querySelector('.modal-content').classList.remove('shake');
-            }, 500);
-        }
-
-        // Update UI based on authentication state
-        function updateAuthUI() {
-            if (isAuthenticated) {
-                loginStatusText.textContent = `Logado como ${userRole === 'admin' ? 'Admin' : 'Usuário'}`;
-                userIdDisplay.textContent = `ID: ${userId}`;
-                userIdDisplay.classList.remove('hidden');
-                logoutBtn.classList.remove('hidden');
-                document.querySelectorAll('.login-status').forEach(el => {
-                    el.classList.add('bg-green-500/20');
-                    el.classList.remove('bg-white/20');
-                });
-                makeFieldsEditable(userRole === 'admin'); // Only admin can edit
-                if (userRole === 'admin') {
-                    saveBtn.classList.remove('hidden'); // Show save button for admin
-                } else {
-                    saveBtn.classList.add('hidden'); // Hide save button for non-admin
-                }
-            } else {
-                loginStatusText.textContent = 'Não logado';
-                userIdDisplay.textContent = '';
-                userIdDisplay.classList.add('hidden');
-                logoutBtn.classList.add('hidden');
-                saveBtn.classList.add('hidden'); // Hide save button when not logged in
-                document.querySelectorAll('.login-status').forEach(el => {
-                    el.classList.add('bg-white/20');
-                    el.classList.remove('bg-green-500/20');
-                });
-                makeFieldsEditable(false);
-            }
-        }
-
-        // Make fields editable (only for admin)
-        function makeFieldsEditable(isEditable) {
-            const editableInputs = [
-                'tarefasp-input', 'elefante-input', 'redacao-input', 'leia-input',
-                'speak-input', 'alura-input', 'matific-input', 'khan-input', 'nota-input',
-                'class-1-name', 'class-1-value', 'class-2-name', 'class-2-value',
-                'class-3-name', 'class-3-value', 'class-4-name', 'class-4-value',
-                'class-5-name', 'class-5-value'
-            ];
-            editableInputs.forEach(id => {
-                const inputElement = document.getElementById(id);
-                if (inputElement) {
-                    inputElement.readOnly = !isEditable;
-                }
-            });
-            // Enable/disable editing of school name, week, and year
-            document.getElementById('school-name').classList.toggle('editable', isEditable);
-            document.getElementById('week-number').classList.toggle('editable', isEditable);
-            document.getElementById('year').classList.toggle('editable', isEditable);
-        }
-
-        // Toast notification function
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            toastMessage.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // Save data via Apps Script
-        async function saveData(key = null, value = null) { // Added default null values
-            if (!isAuthenticated || userRole !== 'admin') {
-                showLoginModal();
-                return;
-            }
-
-            // Get current dashboard data to send a complete update
-            const currentDashboardData = {
-                schoolName: document.getElementById('school-name').textContent,
-                weekNumber: parseInt(document.getElementById('week-number').textContent) || getCurrentWeek(),
-                year: parseInt(document.getElementById('year').textContent) || new Date().getFullYear(),
-                indicators: {},
-                classes: []
-            };
-
-            // Populate indicators
-            const indicatorInputs = ['elefante-input', 'tarefasp-input', 'redacao-input', 'leia-input',
-                'speak-input', 'alura-input', 'matific-input', 'khan-input', 'nota-input'];
-            indicatorInputs.forEach(id => {
-                currentDashboardData.indicators[id] = parseInt(document.getElementById(id).value) || 0;
-            });
-
-            // Populate classes
-            for (let i = 1; i <= 5; i++) {
-                const name = document.getElementById(`class-${i}-name`).value;
-                const val = parseInt(document.getElementById(`class-${i}-value`).value) || 0;
-                currentDashboardData.classes.push({ name: name, value: val });
-            }
-
-            // Update the specific field that was changed, if `key` and `value` are provided
-            if (key) {
-                if (key === 'school-name') {
-                    currentDashboardData.schoolName = value;
-                } else if (key === 'school-week') {
-                    currentDashboardData.weekNumber = value;
-                } else if (key === 'school-year') {
-                    currentDashboardData.year = value;
-                } else if (key.startsWith('class-') && key.endsWith('-name')) {
-                    const index = parseInt(key.split('-')[1]) - 1;
-                    if (currentDashboardData.classes[index]) currentDashboardData.classes[index].name = value;
-                } else if (key.startsWith('class-') && key.endsWith('-value')) {
-                    const index = parseInt(key.split('-')[1]) - 1;
-                    if (currentDashboardData.classes[index]) currentDashboardData.classes[index].value = value;
-                } else { // Assume it's an indicator
-                    currentDashboardData.indicators[key] = value;
-                }
-            }
-
-            console.log("Attempting to save data:", currentDashboardData); // Added console log
-
-            try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=saveData`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Bearer ${userToken}` // Send authentication token
-                    },
-                    body: `data=${JSON.stringify({ dashboardData: currentDashboardData })}`
-                });
-
-                // Log response status for debugging
-                console.log('Save Data Response Status:', response.status, response.statusText);
-                if (!response.ok) { // Check if response status is not 2xx
-                    const errorText = await response.text();
-                    console.error('Save Data Response Body (Error):', errorText);
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showToast('Alterações salvas com sucesso!');
-                } else {
-                    console.error("Erro ao salvar dados:", result.message);
-                    showToast('Erro ao salvar alterações.');
-                }
-            } catch (error) {
-                console.error("Erro ao salvar dados via Apps Script:", error);
-                showToast('Erro de conexão ao salvar.');
-            }
-        }
-
         // Load data from Apps Script
         async function loadDashboardData() {
             try {
@@ -876,9 +367,8 @@
                     method: 'GET'
                 });
 
-                // Log response status for debugging
                 console.log('Load Data Response Status:', response.status, response.statusText);
-                if (!response.ok) { // Check if response status is not 2xx
+                if (!response.ok) { 
                     const errorText = await response.text();
                     console.error('Load Data Response Body (Error):', errorText);
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -902,8 +392,7 @@
                         const inputElement = document.getElementById(indicatorId);
                         if (inputElement) {
                             inputElement.value = data.indicators[indicatorId];
-                            // Manually trigger 'input' event to update the traffic light
-                            inputElement.dispatchEvent(new Event('input'));
+                            inputElement.dispatchEvent(new Event('input')); // Trigger 'input' to update traffic light
                         }
                     }
 
@@ -974,7 +463,6 @@
                     } else {
                         light.classList.add('red');
                     }
-                    saveData(inputId, value); // Save on input change
                 });
             }
         }
@@ -995,157 +483,9 @@
             updateTrafficLight(indicator.input, indicator.light);
         });
 
-        // Editable school name
-        const schoolNameElement = document.getElementById('school-name');
-        const footerSchoolNameElement = document.getElementById('footer-school-name');
-        schoolNameElement.addEventListener('click', function() {
-            if (!isAuthenticated || userRole !== 'admin') {
-                showLoginModal();
-                return;
-            }
-            const currentName = this.textContent;
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = currentName;
-            input.className = 'editable-input';
-            input.style.width = (currentName.length * 10) + 'px'; // Dynamically adjust width
-            this.textContent = '';
-            this.appendChild(input);
-            input.focus();
-            input.addEventListener('blur', function() {
-                const newName = this.value.trim() || defaultDashboardData.schoolName;
-                schoolNameElement.textContent = newName;
-                footerSchoolNameElement.textContent = newName;
-                saveData('school-name', newName); // Save on blur
-            });
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    this.blur();
-                }
-            });
-        });
-
-        // Editable week and year
-        const weekElement = document.getElementById('week-number');
-        const yearElem = document.getElementById('year');
-
-        if (weekElement && yearElem) {
-            weekElement.addEventListener('click', function() {
-                if (!isAuthenticated || userRole !== 'admin') { showLoginModal(); return; }
-                const currentWeek = this.textContent;
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.value = currentWeek;
-                input.className = 'editable-input';
-                input.style.width = '40px';
-                input.min = '1';
-                input.max = '52';
-                this.textContent = '';
-                this.appendChild(input);
-                input.focus();
-                input.addEventListener('blur', function() {
-                    const newWeek = parseInt(this.value) || getCurrentWeek();
-                    weekElement.textContent = newWeek;
-                    saveData('school-week', newWeek); // Save on blur
-                });
-                input.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') { this.blur(); }
-                });
-            });
-
-            yearElem.addEventListener('click', function() {
-                if (!isAuthenticated || userRole !== 'admin') { showLoginModal(); return; }
-                const currentYear = this.textContent;
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.value = currentYear;
-                input.className = 'editable-input';
-                input.style.width = '60px';
-                input.min = '2000';
-                input.max = '2100';
-                this.textContent = '';
-                this.appendChild(input);
-                input.focus();
-                input.addEventListener('blur', function() {
-                    const newYear = parseInt(this.value) || new Date().getFullYear();
-                    yearElem.textContent = newYear;
-                    saveData('school-year', newYear); // Save on blur
-                });
-                input.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') { this.blur(); }
-                });
-            });
-        }
-
-        // Make class names and values editable
-        for (let i = 1; i <= 5; i++) {
-            const classNameInput = document.getElementById(`class-${i}-name`);
-            const classValueInput = document.getElementById(`class-${i}-value`);
-
-            if (classNameInput) {
-                classNameInput.addEventListener('click', function() {
-                    if (!isAuthenticated || userRole !== 'admin') {
-                        showLoginModal();
-                        this.blur();
-                    }
-                });
-                classNameInput.addEventListener('change', function() {
-                    if (!this.value.trim()) {
-                        this.value = `Turma ${i}`;
-                    }
-                    saveData(`class-${i}-name`, this.value); // Save on change
-                });
-            }
-
-            if (classValueInput) {
-                classValueInput.addEventListener('click', function() {
-                    if (!isAuthenticated || userRole !== 'admin') {
-                        showLoginModal();
-                        this.blur();
-                    }
-                });
-                classValueInput.addEventListener('change', function() {
-                    let value = parseInt(this.value);
-                    if (isNaN(value)) value = 0;
-                    if (value < 0) value = 0;
-                    if (value > 100) value = 100;
-                    this.value = value;
-                    saveData(`class-${i}-value`, value); // Save on change
-                });
-            }
-        }
-
-        // Listen for keypress on protected (readonly) inputs
-        document.querySelectorAll('input[readonly]').forEach(input => {
-            input.addEventListener('keydown', function(e) {
-                if (!isAuthenticated && e.key !== 'Tab') {
-                    e.preventDefault();
-                    showLoginModal();
-                }
-            });
-            input.addEventListener('click', function() {
-                if (!isAuthenticated) {
-                    showLoginModal();
-                }
-            });
-        });
-
-        // Load authentication state and data on start
+        // Load data on start
         document.addEventListener('DOMContentLoaded', () => {
-            userToken = localStorage.getItem('userToken');
-            userId = localStorage.getItem('userId');
-            userRole = localStorage.getItem('userRole');
-
-            if (userToken && userId && userRole) {
-                isAuthenticated = true;
-                updateAuthUI();
-                loadDashboardData();
-            } else {
-                isAuthenticated = false;
-                updateAuthUI();
-                loadDefaultData();
-                showLoginModal(); // Show login modal if not authenticated
-            }
+            loadDashboardData();
         });
     </script>
 </body>
