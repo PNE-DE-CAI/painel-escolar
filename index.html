@@ -316,6 +316,10 @@
                     <span id="login-status-text" class="font-semibold">Não logado</span>
                     <span id="user-id-display" class="ml-2 text-sm text-indigo-100 hidden"></span>
                     <button id="logout-btn" class="ml-4 px-3 py-1 bg-white text-indigo-600 rounded-full text-sm font-semibold hover:bg-gray-100 transition hidden">Sair</button>
+                    <!-- Save button, visible only when logged in as admin -->
+                    <button id="save-btn" class="ml-4 px-3 py-1 bg-green-500 text-white rounded-full text-sm font-semibold hover:bg-green-600 transition hidden">
+                        <i class="fas fa-save mr-2"></i>Salvar Tudo
+                    </button>
                 </div>
             </div>
         </div>
@@ -551,13 +555,13 @@
         // COLOQUE A URL DO SEU GOOGLE APPS SCRIPT AQUI
         // Exemplo: const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfyc.../exec';
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6jqbmZ3KoB91OG3vwrAVEcVHJ46jEwVftnybqew_jHuq4mVk4R2RwV6mwUAtKUQJA/exec'; 
-        // Estado de autenticação
+        // Authentication state
         let isAuthenticated = false;
-        let userToken = null; // Token recebido do Apps Script após login
-        let userId = null; // Email do usuário logado
-        let userRole = null; // Papel do usuário (ex: 'admin', 'viewer')
+        let userToken = null; // Token received from Apps Script after login
+        let userId = null; // Logged-in user's email
+        let userRole = null; // User role (e.g., 'admin', 'viewer')
 
-        // Elementos DOM
+        // DOM Elements
         const loginModal = document.getElementById('login-modal');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
@@ -569,11 +573,12 @@
         const loginStatusText = document.getElementById('login-status-text');
         const userIdDisplay = document.getElementById('user-id-display');
         const logoutBtn = document.getElementById('logout-btn');
+        const saveBtn = document.getElementById('save-btn'); // Save button
 
-        // Dados padrão para o painel
+        // Default dashboard data
         const defaultDashboardData = {
             schoolName: 'Excelência Educacional',
-            weekNumber: 1, // Será atualizado por getCurrentWeek
+            weekNumber: 1, // Will be updated by getCurrentWeek
             year: new Date().getFullYear(),
             indicators: {
                 'elefante-input': 70,
@@ -595,7 +600,7 @@
             ]
         };
 
-        // Alternar visibilidade da senha
+        // Toggle password visibility
         togglePassword.addEventListener('click', function() {
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -608,14 +613,14 @@
             }
         });
 
-        // Mostrar modal de login
+        // Show login modal
         function showLoginModal() {
             if (isAuthenticated) return;
             loginModal.classList.add('show');
             emailInput.focus();
         }
 
-        // Esconder modal de login
+        // Hide login modal
         function hideLoginModal() {
             loginModal.classList.remove('show');
             emailInput.value = '';
@@ -623,14 +628,14 @@
             loginError.style.display = 'none';
         }
 
-        // Fechar modal ao clicar fora
+        // Close modal on outside click
         loginModal.addEventListener('click', function(e) {
             if (e.target === loginModal) {
                 hideLoginModal();
             }
         });
 
-        // Lidar com o login
+        // Handle login
         loginBtn.addEventListener('click', async function() {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
@@ -640,18 +645,18 @@
                 return;
             }
 
-            // Mostrar estado de carregamento
+            // Show loading state
             loginText.textContent = 'Verificando...';
             loginSpinner.classList.remove('hidden');
 
             try {
-                // Envia email e senha como parâmetros URL-encoded diretamente
+                // Send email and password as URL-encoded parameters directly
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    // O corpo da requisição pode ser vazio ou conter dados adicionais se necessário pelo Apps Script
+                    // The request body can be empty or contain additional data if needed by Apps Script
                     body: '' 
                 });
 
@@ -670,11 +675,11 @@
                     userToken = result.token;
                     userId = result.userId;
                     userRole = result.role;
-                    localStorage.setItem('userToken', userToken); // Armazenar token
-                    localStorage.setItem('userId', userId); // Armazenar userId
-                    localStorage.setItem('userRole', userRole); // Armazenar userRole
+                    localStorage.setItem('userToken', userToken); // Store token
+                    localStorage.setItem('userId', userId); // Store userId
+                    localStorage.setItem('userRole', userRole); // Store userRole
                     updateAuthUI();
-                    loadDashboardData(); // Carregar dados após login
+                    loadDashboardData(); // Load data after login
                     hideLoginModal();
                     showToast('Login realizado com sucesso!');
                 } else {
@@ -689,7 +694,7 @@
             }
         });
 
-        // Lidar com o logout
+        // Handle logout
         logoutBtn.addEventListener('click', function() {
             isAuthenticated = false;
             userToken = null;
@@ -699,11 +704,16 @@
             localStorage.removeItem('userId');
             localStorage.removeItem('userRole');
             updateAuthUI();
-            loadDefaultData(); // Carregar dados padrão após logout
+            loadDefaultData(); // Load default data after logout
             showToast('Logout realizado com sucesso!');
         });
 
-        // Mostrar mensagem de erro
+        // Handle save button click
+        saveBtn.addEventListener('click', async function() {
+            await saveData(); // Call the saveData function
+        });
+
+        // Show error message
         function showError(message) {
             loginError.textContent = message;
             loginError.style.display = 'block';
@@ -713,7 +723,7 @@
             }, 500);
         }
 
-        // Atualizar UI com base no estado de autenticação
+        // Update UI based on authentication state
         function updateAuthUI() {
             if (isAuthenticated) {
                 loginStatusText.textContent = `Logado como ${userRole === 'admin' ? 'Admin' : 'Usuário'}`;
@@ -724,12 +734,18 @@
                     el.classList.add('bg-green-500/20');
                     el.classList.remove('bg-white/20');
                 });
-                makeFieldsEditable(userRole === 'admin'); // Apenas admin pode editar
+                makeFieldsEditable(userRole === 'admin'); // Only admin can edit
+                if (userRole === 'admin') {
+                    saveBtn.classList.remove('hidden'); // Show save button for admin
+                } else {
+                    saveBtn.classList.add('hidden'); // Hide save button for non-admin
+                }
             } else {
                 loginStatusText.textContent = 'Não logado';
                 userIdDisplay.textContent = '';
                 userIdDisplay.classList.add('hidden');
                 logoutBtn.classList.add('hidden');
+                saveBtn.classList.add('hidden'); // Hide save button when not logged in
                 document.querySelectorAll('.login-status').forEach(el => {
                     el.classList.add('bg-white/20');
                     el.classList.remove('bg-green-500/20');
@@ -738,7 +754,7 @@
             }
         }
 
-        // Tornar campos editáveis (apenas para admin)
+        // Make fields editable (only for admin)
         function makeFieldsEditable(isEditable) {
             const editableInputs = [
                 'tarefasp-input', 'elefante-input', 'redacao-input', 'leia-input',
@@ -753,13 +769,13 @@
                     inputElement.readOnly = !isEditable;
                 }
             });
-            // Habilita/desabilita edição do nome da escola, semana e ano
+            // Enable/disable editing of school name, week, and year
             document.getElementById('school-name').classList.toggle('editable', isEditable);
             document.getElementById('week-number').classList.toggle('editable', isEditable);
             document.getElementById('year').classList.toggle('editable', isEditable);
         }
 
-        // Função de notificação Toast
+        // Toast notification function
         function showToast(message) {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
@@ -770,14 +786,14 @@
             }, 3000);
         }
 
-        // Salvar dados via Apps Script
-        async function saveData(key, value) {
+        // Save data via Apps Script
+        async function saveData(key = null, value = null) { // Added default null values
             if (!isAuthenticated || userRole !== 'admin') {
                 showLoginModal();
                 return;
             }
 
-            // Obter os dados atuais do painel para enviar a atualização completa
+            // Get current dashboard data to send a complete update
             const currentDashboardData = {
                 schoolName: document.getElementById('school-name').textContent,
                 weekNumber: parseInt(document.getElementById('week-number').textContent) || getCurrentWeek(),
@@ -786,43 +802,47 @@
                 classes: []
             };
 
-            // Preencher indicadores
+            // Populate indicators
             const indicatorInputs = ['elefante-input', 'tarefasp-input', 'redacao-input', 'leia-input',
                 'speak-input', 'alura-input', 'matific-input', 'khan-input', 'nota-input'];
             indicatorInputs.forEach(id => {
                 currentDashboardData.indicators[id] = parseInt(document.getElementById(id).value) || 0;
             });
 
-            // Preencher classes
+            // Populate classes
             for (let i = 1; i <= 5; i++) {
                 const name = document.getElementById(`class-${i}-name`).value;
                 const val = parseInt(document.getElementById(`class-${i}-value`).value) || 0;
                 currentDashboardData.classes.push({ name: name, value: val });
             }
 
-            // Atualizar o campo específico que foi alterado
-            if (key === 'school-name') {
-                currentDashboardData.schoolName = value;
-            } else if (key === 'school-week') {
-                currentDashboardData.weekNumber = value;
-            } else if (key === 'school-year') {
-                currentDashboardData.year = value;
-            } else if (key.startsWith('class-') && key.endsWith('-name')) {
-                const index = parseInt(key.split('-')[1]) - 1;
-                if (currentDashboardData.classes[index]) currentDashboardData.classes[index].name = value;
-            } else if (key.startsWith('class-') && key.endsWith('-value')) {
-                const index = parseInt(key.split('-')[1]) - 1;
-                if (currentDashboardData.classes[index]) currentDashboardData.classes[index].value = value;
-            } else { // Assume é um indicador
-                currentDashboardData.indicators[key] = value;
+            // Update the specific field that was changed, if `key` and `value` are provided
+            if (key) {
+                if (key === 'school-name') {
+                    currentDashboardData.schoolName = value;
+                } else if (key === 'school-week') {
+                    currentDashboardData.weekNumber = value;
+                } else if (key === 'school-year') {
+                    currentDashboardData.year = value;
+                } else if (key.startsWith('class-') && key.endsWith('-name')) {
+                    const index = parseInt(key.split('-')[1]) - 1;
+                    if (currentDashboardData.classes[index]) currentDashboardData.classes[index].name = value;
+                } else if (key.startsWith('class-') && key.endsWith('-value')) {
+                    const index = parseInt(key.split('-')[1]) - 1;
+                    if (currentDashboardData.classes[index]) currentDashboardData.classes[index].value = value;
+                } else { // Assume it's an indicator
+                    currentDashboardData.indicators[key] = value;
+                }
             }
+
+            console.log("Attempting to save data:", currentDashboardData); // Added console log
 
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=saveData`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Bearer ${userToken}` // Envia o token de autenticação
+                        'Authorization': `Bearer ${userToken}` // Send authentication token
                     },
                     body: `data=${JSON.stringify({ dashboardData: currentDashboardData })}`
                 });
@@ -849,7 +869,7 @@
             }
         }
 
-        // Carregar dados do Apps Script
+        // Load data from Apps Script
         async function loadDashboardData() {
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=getDashboardData`, {
@@ -869,25 +889,25 @@
                 if (result.success && result.dashboardData) {
                     const data = result.dashboardData;
                     
-                    // Atualizar nome da escola
+                    // Update school name
                     document.getElementById('school-name').textContent = data.schoolName;
                     document.getElementById('footer-school-name').textContent = data.schoolName;
 
-                    // Atualizar semana e ano
+                    // Update week and year
                     document.getElementById('week-number').textContent = data.weekNumber;
                     document.getElementById('year').textContent = data.year;
 
-                    // Atualizar indicadores
+                    // Update indicators
                     for (const indicatorId in data.indicators) {
                         const inputElement = document.getElementById(indicatorId);
                         if (inputElement) {
                             inputElement.value = data.indicators[indicatorId];
-                            // Dispara evento 'input' manualmente para atualizar o semáforo
+                            // Manually trigger 'input' event to update the traffic light
                             inputElement.dispatchEvent(new Event('input'));
                         }
                     }
 
-                    // Atualizar turmas
+                    // Update classes
                     data.classes.forEach((classData, index) => {
                         const classNameInput = document.getElementById(`class-${index + 1}-name`);
                         const classValueInput = document.getElementById(`class-${index + 1}-value`);
@@ -896,16 +916,16 @@
                     });
 
                 } else {
-                    console.warn("Nenhum dado encontrado ou erro ao carregar do Apps Script:", result.message);
-                    loadDefaultData(); // Carregar dados padrão se Apps Script falhar
+                    console.warn("No data found or error loading from Apps Script:", result.message);
+                    loadDefaultData(); // Load default data if Apps Script fails
                 }
             } catch (error) {
-                console.error("Erro ao carregar dados do Apps Script:", error);
-                loadDefaultData(); // Carregar dados padrão em caso de erro de rede
+                console.error("Error loading data from Apps Script:", error);
+                loadDefaultData(); // Load default data in case of network error
             }
         }
 
-        // Carregar dados padrão se o Apps Script falhar ou estiver vazio
+        // Load default data if Apps Script fails or is empty
         function loadDefaultData() {
             document.getElementById('school-name').textContent = defaultDashboardData.schoolName;
             document.getElementById('footer-school-name').textContent = defaultDashboardData.schoolName;
@@ -916,7 +936,7 @@
                 const inputElement = document.getElementById(indicatorId);
                 if (inputElement) {
                     inputElement.value = defaultDashboardData.indicators[indicatorId];
-                    inputElement.dispatchEvent(new Event('input')); // Atualiza o semáforo
+                    inputElement.dispatchEvent(new Event('input')); // Update traffic light
                 }
             }
 
@@ -928,7 +948,7 @@
             });
         }
 
-        // Obter a semana atual
+        // Get current week
         function getCurrentWeek() {
             const now = new Date();
             const start = new Date(now.getFullYear(), 0, 1);
@@ -939,7 +959,7 @@
             return week;
         }
 
-        // Lógica do semáforo
+        // Traffic light logic
         function updateTrafficLight(inputId, lightId) {
             const input = document.getElementById(inputId);
             const light = document.getElementById(lightId);
@@ -954,12 +974,12 @@
                     } else {
                         light.classList.add('red');
                     }
-                    saveData(inputId, value); // Salvar na mudança do input
+                    saveData(inputId, value); // Save on input change
                 });
             }
         }
 
-        // Inicializar todos os semáforos
+        // Initialize all traffic lights
         const indicators = [
             { input: 'tarefasp-input', light: 'tarefasp-light' },
             { input: 'elefante-input', light: 'elefante-light' },
@@ -975,7 +995,7 @@
             updateTrafficLight(indicator.input, indicator.light);
         });
 
-        // Nome da escola editável
+        // Editable school name
         const schoolNameElement = document.getElementById('school-name');
         const footerSchoolNameElement = document.getElementById('footer-school-name');
         schoolNameElement.addEventListener('click', function() {
@@ -988,7 +1008,7 @@
             input.type = 'text';
             input.value = currentName;
             input.className = 'editable-input';
-            input.style.width = (currentName.length * 10) + 'px'; // Ajusta largura dinamicamente
+            input.style.width = (currentName.length * 10) + 'px'; // Dynamically adjust width
             this.textContent = '';
             this.appendChild(input);
             input.focus();
@@ -996,7 +1016,7 @@
                 const newName = this.value.trim() || defaultDashboardData.schoolName;
                 schoolNameElement.textContent = newName;
                 footerSchoolNameElement.textContent = newName;
-                saveData('school-name', newName);
+                saveData('school-name', newName); // Save on blur
             });
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -1005,7 +1025,7 @@
             });
         });
 
-        // Semana e ano editáveis
+        // Editable week and year
         const weekElement = document.getElementById('week-number');
         const yearElem = document.getElementById('year');
 
@@ -1026,7 +1046,7 @@
                 input.addEventListener('blur', function() {
                     const newWeek = parseInt(this.value) || getCurrentWeek();
                     weekElement.textContent = newWeek;
-                    saveData('school-week', newWeek);
+                    saveData('school-week', newWeek); // Save on blur
                 });
                 input.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') { this.blur(); }
@@ -1049,7 +1069,7 @@
                 input.addEventListener('blur', function() {
                     const newYear = parseInt(this.value) || new Date().getFullYear();
                     yearElem.textContent = newYear;
-                    saveData('school-year', newYear);
+                    saveData('school-year', newYear); // Save on blur
                 });
                 input.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') { this.blur(); }
@@ -1057,7 +1077,7 @@
             });
         }
 
-        // Tornar nomes e valores das turmas editáveis
+        // Make class names and values editable
         for (let i = 1; i <= 5; i++) {
             const classNameInput = document.getElementById(`class-${i}-name`);
             const classValueInput = document.getElementById(`class-${i}-value`);
@@ -1073,7 +1093,7 @@
                     if (!this.value.trim()) {
                         this.value = `Turma ${i}`;
                     }
-                    saveData(`class-${i}-name`, this.value);
+                    saveData(`class-${i}-name`, this.value); // Save on change
                 });
             }
 
@@ -1090,12 +1110,12 @@
                     if (value < 0) value = 0;
                     if (value > 100) value = 100;
                     this.value = value;
-                    saveData(`class-${i}-value`, value);
+                    saveData(`class-${i}-value`, value); // Save on change
                 });
             }
         }
 
-        // Ouvir keypress em inputs protegidos (somente leitura)
+        // Listen for keypress on protected (readonly) inputs
         document.querySelectorAll('input[readonly]').forEach(input => {
             input.addEventListener('keydown', function(e) {
                 if (!isAuthenticated && e.key !== 'Tab') {
@@ -1110,7 +1130,7 @@
             });
         });
 
-        // Carregar estado de autenticação e dados ao iniciar
+        // Load authentication state and data on start
         document.addEventListener('DOMContentLoaded', () => {
             userToken = localStorage.getItem('userToken');
             userId = localStorage.getItem('userId');
@@ -1124,7 +1144,7 @@
                 isAuthenticated = false;
                 updateAuthUI();
                 loadDefaultData();
-                showLoginModal(); // Mostra o modal de login se não estiver autenticado
+                showLoginModal(); // Show login modal if not authenticated
             }
         });
     </script>
